@@ -33,7 +33,7 @@ const translations = {
     
     // Footer
     footerTitle: 'Endfield Tools',
-    footerDisclaimer1: '본 도구는 팼메이드이며, Gryphline/Hypergryph와 무관합니다.',
+    footerDisclaimer1: '본 도구는 팬메이드이며, Gryphline/Hypergryph와 무관합니다.',
     footerDisclaimer2: 'Arknights: Endfield™ 및 관련 상표는 각 소유자의 자산입니다.',
   },
   en: {
