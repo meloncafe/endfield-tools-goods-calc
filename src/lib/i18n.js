@@ -29,7 +29,7 @@ const translations = {
     profit: '이익',
     
     // Helper
-    helperText: '판매가 입력 시 자동으로 다음 행이 추가됩니다',
+    helperText: '구매가 입력 시 자동으로 다음 행이 추가됩니다',
     
     // Footer
     footerTitle: 'Endfield Tools',
@@ -53,7 +53,7 @@ const translations = {
     revenue: 'Revenue',
     profit: 'Profit',
     
-    helperText: 'Next row is automatically added when you enter sell price',
+    helperText: 'Next row is automatically added when you enter buy price',
     
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'This is a fan-made tool, not affiliated with Gryphline/Hypergryph.',
@@ -76,7 +76,7 @@ const translations = {
     revenue: '収益',
     profit: '利益',
     
-    helperText: '売却価格入力時に次の行が自動追加されます',
+    helperText: '購入価格入力時に次の行が自動追加されます',
     
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'これはファンメイドツールであり、Gryphline/Hypergryphとは無関係です。',
@@ -99,7 +99,7 @@ const translations = {
     revenue: '收益',
     profit: '利润',
     
-    helperText: '输入卖出价后会自动添加下一行',
+    helperText: '输入买入价后会自动添加下一行',
     
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: '这是粉丝制作的工具，与Gryphline/Hypergryph无关。',
