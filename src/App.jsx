@@ -111,8 +111,8 @@ export default function App() {
       item.id === id ? { ...item, [field]: value } : item
     ));
     
-    // 판매가에 입력이 들어오면 자동으로 다음 행 추가
-    if (field === 'sellPrice' && value !== '') {
+    // 구매가에 입력이 들어오면 자동으로 다음 행 추가
+    if (field === 'buyPrice' && value !== '') {
       const currentIndex = items.findIndex(item => item.id === id);
       if (currentIndex === items.length - 1) {
         setItems(prev => [...prev, { id: nextId, buyPrice: '', sellPrice: '' }]);
