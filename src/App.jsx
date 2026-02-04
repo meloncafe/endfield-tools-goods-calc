@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github } from 'lucide-react';
+import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github, StickyNote } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import { detectBrowserLanguage, getTranslation, formatItemRecommended } from '@/lib/i18n';
 
@@ -14,10 +14,11 @@ const EXPIRY_HOURS = 24;
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [lang, setLang] = useState('en');
-  const [items, setItems] = useState([{ id: 1, buyPrice: '', sellPrice: '' }]);
+  const [items, setItems] = useState([{ id: 1, buyPrice: '', sellPrice: '', memo: '' }]);
   const [quantity, setQuantity] = useState(100);
   const [nextId, setNextId] = useState(2);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [memoEnabled, setMemoEnabled] = useState(false);
 
   const t = getTranslation(lang);
 
@@ -35,11 +36,17 @@ export default function App() {
         const expiryTime = EXPIRY_HOURS * 60 * 60 * 1000;
         
         if (now - timestamp < expiryTime) {
-          setItems(data.items);
+          // Migrate items without memo field
+          const migratedItems = (data.items || []).map(item => ({
+            ...item,
+            memo: item.memo || ''
+          }));
+          setItems(migratedItems);
           setQuantity(data.quantity);
           setNextId(data.nextId);
           setDarkMode(data.darkMode || false);
           if (data.lang) setLang(data.lang);
+          if (data.memoEnabled !== undefined) setMemoEnabled(data.memoEnabled);
         } else {
           localStorage.removeItem(STORAGE_KEY);
         }
@@ -56,14 +63,14 @@ export default function App() {
     
     try {
       const dataToSave = {
-        data: { items, quantity, nextId, darkMode, lang },
+        data: { items, quantity, nextId, darkMode, lang, memoEnabled },
         timestamp: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
     } catch (e) {
       // localStorage 접근 불가 시 무시
     }
-  }, [items, quantity, nextId, darkMode, lang, isLoaded]);
+  }, [items, quantity, nextId, darkMode, lang, memoEnabled, isLoaded]);
 
   const calculations = useMemo(() => {
     return items.map(item => {
@@ -98,9 +105,10 @@ export default function App() {
   };
 
   const resetAll = () => {
-    setItems([{ id: 1, buyPrice: '', sellPrice: '' }]);
+    setItems([{ id: 1, buyPrice: '', sellPrice: '', memo: '' }]);
     setNextId(2);
     setQuantity(100);
+    setMemoEnabled(false);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
@@ -115,7 +123,7 @@ export default function App() {
     if (field === 'buyPrice' && value !== '') {
       const currentIndex = items.findIndex(item => item.id === id);
       if (currentIndex === items.length - 1) {
-        setItems(prev => [...prev, { id: nextId, buyPrice: '', sellPrice: '' }]);
+        setItems(prev => [...prev, { id: nextId, buyPrice: '', sellPrice: '', memo: '' }]);
         setNextId(prev => prev + 1);
       }
     }
@@ -123,6 +131,23 @@ export default function App() {
 
   const formatNumber = (num) => {
     return num.toLocaleString(lang === 'ko' ? 'ko-KR' : lang === 'ja' ? 'ja-JP' : lang === 'zh' ? 'zh-CN' : 'en-US');
+  };
+
+  // Tab index calculation
+  const getTabIndex = (index, field) => {
+    if (memoEnabled) {
+      // memo=1, buy=2, sell=3 per row
+      const base = index * 3;
+      if (field === 'memo') return base + 1;
+      if (field === 'buy') return base + 2;
+      if (field === 'sell') return base + 3;
+    } else {
+      // buy=1, sell=2 per row
+      const base = index * 2;
+      if (field === 'buy') return base + 1;
+      if (field === 'sell') return base + 2;
+    }
+    return -1;
   };
 
   // Theme classes
@@ -138,6 +163,7 @@ export default function App() {
     tableRowBest: darkMode ? 'bg-emerald-900/30 hover:bg-emerald-900/40' : 'bg-emerald-50 hover:bg-emerald-100',
     resultCard: darkMode ? 'bg-zinc-800 border-emerald-600/50' : 'bg-emerald-50 border-emerald-200',
     button: darkMode ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-100 border-zinc-600' : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-300',
+    buttonActive: darkMode ? 'bg-amber-600 hover:bg-amber-500 text-white border-amber-500' : 'bg-amber-500 hover:bg-amber-600 text-white border-amber-400',
     footer: darkMode ? 'bg-zinc-800/50' : 'bg-slate-100',
     separator: darkMode ? 'bg-zinc-700/50' : 'bg-slate-300/30',
     link: darkMode ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700',
@@ -172,6 +198,17 @@ export default function App() {
                 tabIndex={-1}
               />
             </div>
+            
+            {/* Memo Toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMemoEnabled(!memoEnabled)}
+              className={`h-8 px-3 ${memoEnabled ? theme.buttonActive : theme.button}`}
+            >
+              <StickyNote className="w-3.5 h-3.5 mr-1.5" />
+              {memoEnabled ? t.memoOn : t.memoOff}
+            </Button>
             
             {/* Reset Button */}
             <Button
@@ -219,6 +256,9 @@ export default function App() {
             <thead>
               <tr className={`text-xs font-medium uppercase tracking-wider ${theme.tableHeader}`}>
                 <th className={`text-left py-3 px-4 border-b ${theme.textMuted}`}>#</th>
+                {memoEnabled && (
+                  <th className={`text-left py-3 px-3 border-b ${theme.textMuted}`}>{t.memo}</th>
+                )}
                 <th className={`text-left py-3 px-3 border-b ${theme.textMuted}`}>{t.buyPrice}</th>
                 <th className={`text-left py-3 px-3 border-b ${theme.textMuted}`}>{t.sellPrice}</th>
                 <th className={`text-right py-3 px-3 border-b ${theme.textMuted}`}>{t.profitPerUnit}</th>
@@ -246,6 +286,18 @@ export default function App() {
                         </Badge>
                       )}
                     </td>
+                    {memoEnabled && (
+                      <td className="py-3 px-3">
+                        <Input
+                          type="text"
+                          placeholder="-"
+                          value={item.memo}
+                          onChange={(e) => updateItem(item.id, 'memo', e.target.value)}
+                          className={`h-8 w-24 text-sm ${theme.input}`}
+                          tabIndex={getTabIndex(index, 'memo')}
+                        />
+                      </td>
+                    )}
                     <td className="py-3 px-3">
                       <Input
                         type="number"
@@ -253,7 +305,7 @@ export default function App() {
                         value={item.buyPrice}
                         onChange={(e) => updateItem(item.id, 'buyPrice', e.target.value)}
                         className={`h-8 w-28 text-sm ${theme.input}`}
-                        tabIndex={index * 2 + 1}
+                        tabIndex={getTabIndex(index, 'buy')}
                       />
                     </td>
                     <td className="py-3 px-3">
@@ -263,7 +315,7 @@ export default function App() {
                         value={item.sellPrice}
                         onChange={(e) => updateItem(item.id, 'sellPrice', e.target.value)}
                         className={`h-8 w-28 text-sm ${theme.input}`}
-                        tabIndex={index * 2 + 2}
+                        tabIndex={getTabIndex(index, 'sell')}
                       />
                     </td>
                     <td className={`py-3 px-3 text-right font-semibold ${

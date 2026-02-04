@@ -15,6 +15,9 @@ const translations = {
     reset: '초기화',
     light: '라이트',
     dark: '다크',
+    memo: '메모',
+    memoOn: '메모 ON',
+    memoOff: '메모 OFF',
     
     // Table
     buyPrice: '구매가',
@@ -42,6 +45,9 @@ const translations = {
     reset: 'Reset',
     light: 'Light',
     dark: 'Dark',
+    memo: 'Memo',
+    memoOn: 'Memo ON',
+    memoOff: 'Memo OFF',
     
     buyPrice: 'Buy Price',
     sellPrice: 'Sell Price',
@@ -65,6 +71,9 @@ const translations = {
     reset: 'リセット',
     light: 'ライト',
     dark: 'ダーク',
+    memo: 'メモ',
+    memoOn: 'メモ ON',
+    memoOff: 'メモ OFF',
     
     buyPrice: '購入価格',
     sellPrice: '売却価格',
@@ -88,6 +97,9 @@ const translations = {
     reset: '重置',
     light: '浅色',
     dark: '深色',
+    memo: '备注',
+    memoOn: '备注 ON',
+    memoOff: '备注 OFF',
     
     buyPrice: '买入价',
     sellPrice: '卖出价',
