@@ -1,23 +1,27 @@
 // Worker entry point: handles /api/ocr + static assets fallback
 
-const RATE_LIMIT_WINDOW = 60_000; // 1 minute in ms
-const RATE_LIMIT_MAX = 5;
+// Daily rate limit: 5 requests per IP per day
+const DAILY_LIMIT = 5;
 const rateLimitMap = new Map();
 
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW;
+function getTodayKey() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
-  if (!rateLimitMap.has(ip)) {
-    rateLimitMap.set(ip, []);
+function checkDailyLimit(ip) {
+  const today = getTodayKey();
+  const key = `${ip}:${today}`;
+
+  // Clean old entries (different day)
+  for (const k of rateLimitMap.keys()) {
+    if (!k.endsWith(today)) rateLimitMap.delete(k);
   }
 
-  const timestamps = rateLimitMap.get(ip).filter(t => t > windowStart);
-  rateLimitMap.set(ip, timestamps);
+  const count = rateLimitMap.get(key) || 0;
+  if (count >= DAILY_LIMIT) return { allowed: false, remaining: 0 };
 
-  if (timestamps.length >= RATE_LIMIT_MAX) return false;
-  timestamps.push(now);
-  return true;
+  rateLimitMap.set(key, count + 1);
+  return { allowed: true, remaining: DAILY_LIMIT - count - 1 };
 }
 
 function corsHeaders() {
@@ -28,19 +32,17 @@ function corsHeaders() {
   };
 }
 
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, extra = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(), 'Content-Type': 'application/json', ...extra },
   });
 }
 
 async function handleOcr(request, env) {
-  // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
-
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
@@ -52,10 +54,15 @@ async function handleOcr(request, env) {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
-  // Rate limit
+  // Daily rate limit per IP
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-  if (!checkRateLimit(ip)) {
-    return jsonResponse({ error: 'Rate limit exceeded. Try again in 1 minute.' }, 429);
+  const { allowed, remaining } = checkDailyLimit(ip);
+  if (!allowed) {
+    return jsonResponse(
+      { error: 'Daily limit reached (5/day). Try again tomorrow.' },
+      429,
+      { 'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': 'tomorrow' }
+    );
   }
 
   // Parse body
@@ -70,8 +77,6 @@ async function handleOcr(request, env) {
   if (!image) {
     return jsonResponse({ error: 'Missing "image" field (base64)' }, 400);
   }
-
-  // Client resizes to max 1920px JPEG, but allow up to ~1.5MB decoded
   if (image.length > 2_000_000) {
     return jsonResponse({ error: 'Image too large. Max ~1.5MB.' }, 413);
   }
@@ -81,7 +86,6 @@ async function handleOcr(request, env) {
     return jsonResponse({ error: 'Server misconfiguration: missing API key' }, 500);
   }
 
-  // Language hints
   const langHints = {
     ko: '한국어 게임 UI입니다. 아이템명을 한국어로 추출하세요.',
     en: 'English game UI. Extract item names in English.',
@@ -104,15 +108,11 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 If no items are found or the image is not a game screenshot, return:
 {"items": [], "error": "No tradeable items found"}`;
 
-  // Client sends raw base64 (already JPEG from canvas)
   const mimeType = 'image/jpeg';
   let base64Data = image;
-  // Handle if data URL prefix is accidentally included
   if (image.startsWith('data:')) {
     const match = image.match(/^data:(image\/\w+);base64,(.+)$/);
-    if (match) {
-      base64Data = match[2];
-    }
+    if (match) base64Data = match[2];
   }
 
   try {
@@ -122,16 +122,11 @@ If no items are found or the image is not a game screenshot, return:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mimeType, data: base64Data } },
-          ],
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 2048,
-        },
+        contents: [{ parts: [
+          { text: prompt },
+          { inline_data: { mime_type: mimeType, data: base64Data } },
+        ]}],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048 },
       }),
     });
 
@@ -152,6 +147,10 @@ If no items are found or the image is not a game screenshot, return:
       return jsonResponse({ error: 'Failed to parse Gemini response', raw: cleaned }, 500);
     }
 
+    // Include rate limit info in success response
+    parsed._rateLimit = { remaining, daily: DAILY_LIMIT };
+
+    console.log(`OCR success: ip=${ip}, items=${parsed.items?.length || 0}, remaining=${remaining}`);
     return jsonResponse(parsed);
   } catch (err) {
     console.error('OCR error:', err);
@@ -162,13 +161,9 @@ If no items are found or the image is not a game screenshot, return:
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-
-    // API routes
     if (url.pathname === '/api/ocr') {
       return handleOcr(request, env);
     }
-
-    // Everything else: static assets
     return env.ASSETS.fetch(request);
   },
 };
