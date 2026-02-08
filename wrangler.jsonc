@@ -7,6 +7,9 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  // Preserve dashboard-set variables/secrets across deploys
+  // Secrets (encrypted) should persist regardless, but this is extra safety
+  "keep_vars": true,
   // Disable workers.dev subdomain — use custom domain only (calc.endfield.tools)
   "workers_dev": false,
   "observability": {
