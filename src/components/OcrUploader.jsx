@@ -4,94 +4,110 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Camera, Upload, Loader2, Check, AlertCircle, X, Clipboard } from 'lucide-react';
 
+const MAX_DIMENSION = 1920;
+const JPEG_QUALITY = 0.85;
+const MAX_BASE64_LENGTH = 2_000_000; // ~1.5MB decoded
+
+/**
+ * Resize image on client side using Canvas API.
+ * Caps at 1920px max dimension, converts to JPEG.
+ */
+function processImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Scale down if exceeds max dimension
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+      const base64 = dataUrl.split(',')[1];
+
+      URL.revokeObjectURL(img.src);
+
+      resolve({
+        base64,
+        dataUrl,
+        originalSize: file.size,
+        width,
+        height,
+        processedSize: Math.round(base64.length * 0.75), // approximate decoded size
+      });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function OcrUploader({ lang, theme, onImport }) {
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageData, setImageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Get test token from URL
   const testToken = new URLSearchParams(window.location.search).get('test');
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
+  const handleFile = async (file) => {
     if (!file) return;
-
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file.');
-      return;
-    }
-
-    // Validate file size (1MB)
-    if (file.size > 1_048_576) {
-      setError('Image must be under 1MB. Try cropping or compressing.');
       return;
     }
 
     setError(null);
     setResult(null);
 
-    // Preview
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
+    try {
+      const data = await processImage(file);
 
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result; // includes data:image/...;base64,
-      setImage(base64);
-    };
-    reader.readAsDataURL(file);
+      if (data.base64.length > MAX_BASE64_LENGTH) {
+        setError(`Image still too large after resize (${(data.processedSize / 1024).toFixed(0)}KB). Try cropping the relevant area.`);
+        return;
+      }
+
+      setImageData(data);
+    } catch (err) {
+      setError(`Failed to process image: ${err.message}`);
+    }
   };
+
+  const handleFileSelect = (e) => handleFile(e.target.files?.[0]);
 
   const handlePaste = async (e) => {
     const items = e.clipboardData?.items;
     if (!items) return;
-
     for (const item of items) {
       if (item.type.startsWith('image/')) {
         e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          // Validate size
-          if (file.size > 1_048_576) {
-            setError('Pasted image is too large. Max 1MB.');
-            return;
-          }
-
-          setError(null);
-          setResult(null);
-
-          const previewUrl = URL.createObjectURL(file);
-          setImagePreview(previewUrl);
-
-          const reader = new FileReader();
-          reader.onload = () => setImage(reader.result);
-          reader.readAsDataURL(file);
-        }
+        handleFile(item.getAsFile());
         break;
       }
     }
   };
 
   const handleAnalyze = async () => {
-    if (!image || !testToken) return;
+    if (!imageData || !testToken) return;
 
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      // Strip data URL prefix for API, send raw base64
-      let base64Data = image;
-      const match = image.match(/^data:image\/\w+;base64,(.+)$/);
-      if (match) {
-        base64Data = match[1];
-      }
-
       const response = await fetch('/api/ocr', {
         method: 'POST',
         headers: {
@@ -99,7 +115,7 @@ export default function OcrUploader({ lang, theme, onImport }) {
           'X-Test-Token': testToken,
         },
         body: JSON.stringify({
-          image: base64Data,
+          image: imageData.base64,
           lang: lang,
         }),
       });
@@ -127,18 +143,18 @@ export default function OcrUploader({ lang, theme, onImport }) {
     if (result?.items && onImport) {
       onImport(result.items);
       setResult(null);
-      setImage(null);
-      setImagePreview(null);
+      setImageData(null);
     }
   };
 
   const handleClear = () => {
-    setImage(null);
-    setImagePreview(null);
+    setImageData(null);
     setResult(null);
     setError(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const formatSize = (bytes) => bytes < 1024 ? `${bytes}B` : `${(bytes / 1024).toFixed(0)}KB`;
 
   return (
     <Card
@@ -154,7 +170,7 @@ export default function OcrUploader({ lang, theme, onImport }) {
           </span>
           <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">TEST</Badge>
         </div>
-        {(image || result) && (
+        {(imageData || result) && (
           <Button
             variant="ghost"
             size="sm"
@@ -168,7 +184,7 @@ export default function OcrUploader({ lang, theme, onImport }) {
       </div>
 
       {/* Upload Area */}
-      {!image && (
+      {!imageData && (
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
             ${theme.card} hover:border-emerald-500/50`}
@@ -179,7 +195,7 @@ export default function OcrUploader({ lang, theme, onImport }) {
             Click to upload or paste (Ctrl+V) a screenshot
           </p>
           <p className={`text-xs mt-1 ${theme.textMuted} opacity-60`}>
-            Trading post / shop screen · Max 1MB
+            Trading post / market screen · Any resolution OK (auto-optimized)
           </p>
           <input
             ref={fileInputRef}
@@ -191,19 +207,25 @@ export default function OcrUploader({ lang, theme, onImport }) {
         </div>
       )}
 
-      {/* Image Preview */}
-      {imagePreview && (
-        <div className="relative">
+      {/* Image Preview + Size Info */}
+      {imageData && (
+        <div className="space-y-2">
           <img
-            src={imagePreview}
+            src={imageData.dataUrl}
             alt="Screenshot preview"
             className="w-full max-h-64 object-contain rounded-lg border border-gray-700/30"
           />
+          <div className={`flex items-center gap-2 text-[11px] ${theme.textMuted}`}>
+            <span>{formatSize(imageData.originalSize)}</span>
+            <span>→</span>
+            <span>{formatSize(imageData.processedSize)} JPEG</span>
+            <span className="opacity-50">({imageData.width}×{imageData.height})</span>
+          </div>
         </div>
       )}
 
       {/* Analyze Button */}
-      {image && !result && (
+      {imageData && !result && (
         <Button
           onClick={handleAnalyze}
           disabled={loading}
@@ -269,7 +291,7 @@ export default function OcrUploader({ lang, theme, onImport }) {
         </div>
       )}
 
-      {/* Paste listener hint */}
+      {/* Paste hint */}
       <div className={`flex items-center gap-1.5 text-[10px] ${theme.textMuted} opacity-50`}>
         <Clipboard className="w-3 h-3" />
         Tip: You can paste screenshots directly with Ctrl+V / Cmd+V
