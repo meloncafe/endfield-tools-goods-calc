@@ -29,6 +29,7 @@ export default function App() {
   const [nextId, setNextId] = useState(2);
   const [isLoaded, setIsLoaded] = useState(false);
   const [memoEnabled, setMemoEnabled] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
 
   const testToken = getTestToken();
   const t = getTranslation(lang);
@@ -120,6 +121,7 @@ export default function App() {
     setNextId(2);
     setQuantity(100);
     setMemoEnabled(false);
+    setResetKey(k => k + 1);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (e) {}
@@ -294,6 +296,7 @@ export default function App() {
             lang={lang}
             theme={theme}
             onImport={handleOcrImport}
+            resetKey={resetKey}
           />
         )}
 
