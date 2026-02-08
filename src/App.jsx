@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github, StickyNote } from 'lucide-react';
+import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github, StickyNote, Heart } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import OcrUploader from '@/components/OcrUploader';
 import { detectBrowserLanguage, getTranslation, formatItemRecommended } from '@/lib/i18n';
@@ -438,7 +438,7 @@ export default function App() {
             
             <Separator className={theme.separator} />
             
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center gap-4">
               <a 
                 href="https://github.com/meloncafe/endfield-tools-goods-calc" 
                 target="_blank" 
@@ -447,6 +447,18 @@ export default function App() {
               >
                 <Github className="w-3.5 h-3.5" />
                 <span>GitHub</span>
+              </a>
+              <span className={theme.textMuted}>·</span>
+              <a 
+                href="https://patreon.com/c/devsaurus" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`flex items-center gap-1.5 text-xs transition-colors ${
+                  darkMode ? 'text-orange-400 hover:text-orange-300' : 'text-orange-500 hover:text-orange-600'
+                }`}
+              >
+                <Heart className="w-3.5 h-3.5" />
+                <span>{t.footerSupport}</span>
               </a>
             </div>
           </div>

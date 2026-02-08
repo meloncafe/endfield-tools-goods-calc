@@ -38,6 +38,7 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: '본 도구는 팬메이드이며, Gryphline/Hypergryph와 무관합니다.',
     footerDisclaimer2: 'Arknights: Endfield™ 및 관련 상표는 각 소유자의 자산입니다.',
+    footerSupport: '후원하기',
 
     // OCR
     ocrTitle: '스크린샷 자동 입력',
@@ -77,6 +78,7 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'This is a fan-made tool, not affiliated with Gryphline/Hypergryph.',
     footerDisclaimer2: 'Arknights: Endfield™ and related trademarks are property of their respective owners.',
+    footerSupport: 'Support',
 
     // OCR
     ocrTitle: 'Screenshot Auto-Import',
@@ -116,6 +118,7 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'これはファンメイドツールであり、Gryphline/Hypergryphとは無関係です。',
     footerDisclaimer2: 'Arknights: Endfield™および関連商標は各所有者の資産です。',
+    footerSupport: 'サポート',
 
     // OCR
     ocrTitle: 'スクリーンショット自動入力',
@@ -155,6 +158,7 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: '这是粉丝制作的工具，与Gryphline/Hypergryph无关。',
     footerDisclaimer2: 'Arknights: Endfield™及相关商标均为各自所有者的财产。',
+    footerSupport: '支持我们',
 
     // OCR
     ocrTitle: '截图自动导入',
