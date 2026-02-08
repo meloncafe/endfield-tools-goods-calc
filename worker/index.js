@@ -71,9 +71,9 @@ async function handleOcr(request, env) {
     return jsonResponse({ error: 'Missing "image" field (base64)' }, 400);
   }
 
-  // ~1MB base64 limit
-  if (image.length > 1_400_000) {
-    return jsonResponse({ error: 'Image too large. Max 1MB.' }, 413);
+  // Client resizes to max 1920px JPEG, but allow up to ~1.5MB decoded
+  if (image.length > 2_000_000) {
+    return jsonResponse({ error: 'Image too large. Max ~1.5MB.' }, 413);
   }
 
   const geminiKey = env.GEMINI_API_KEY;
@@ -104,13 +104,13 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 If no items are found or the image is not a game screenshot, return:
 {"items": [], "error": "No tradeable items found"}`;
 
-  // Parse mime type
-  let mimeType = 'image/png';
+  // Client sends raw base64 (already JPEG from canvas)
+  const mimeType = 'image/jpeg';
   let base64Data = image;
+  // Handle if data URL prefix is accidentally included
   if (image.startsWith('data:')) {
     const match = image.match(/^data:(image\/\w+);base64,(.+)$/);
     if (match) {
-      mimeType = match[1];
       base64Data = match[2];
     }
   }
