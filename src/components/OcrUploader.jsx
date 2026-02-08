@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ function processImage(file) {
   });
 }
 
-export default function OcrUploader({ lang, theme, onImport }) {
+export default function OcrUploader({ lang, theme, onImport, resetKey }) {
   const [imageData, setImageData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [importedCount, setImportedCount] = useState(null);
@@ -41,6 +41,15 @@ export default function OcrUploader({ lang, theme, onImport }) {
   const fileInputRef = useRef(null);
 
   const testToken = new URLSearchParams(window.location.search).get('test');
+
+  // Reset all internal state when resetKey changes (triggered by parent's reset button)
+  useEffect(() => {
+    setImageData(null);
+    setLoading(false);
+    setImportedCount(null);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, [resetKey]);
 
   const analyzeAndImport = useCallback(async (data) => {
     if (!data || !testToken) return;
