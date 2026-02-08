@@ -12,15 +12,6 @@ import { detectBrowserLanguage, getTranslation, formatItemRecommended } from '@/
 const STORAGE_KEY = 'profit-calculator-data';
 const EXPIRY_HOURS = 24;
 
-// Check for test mode via URL parameter
-function getTestToken() {
-  try {
-    return new URLSearchParams(window.location.search).get('test');
-  } catch {
-    return null;
-  }
-}
-
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [lang, setLang] = useState('en');
@@ -31,7 +22,6 @@ export default function App() {
   const [memoEnabled, setMemoEnabled] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
-  const testToken = getTestToken();
   const t = getTranslation(lang);
 
   // localStorage에서 데이터 로드
@@ -290,15 +280,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* OCR Uploader - only visible in test mode */}
-        {testToken && (
-          <OcrUploader
-            lang={lang}
-            theme={theme}
-            onImport={handleOcrImport}
-            resetKey={resetKey}
-          />
-        )}
+        {/* OCR Uploader */}
+        <OcrUploader
+          lang={lang}
+          theme={theme}
+          onImport={handleOcrImport}
+          resetKey={resetKey}
+        />
 
         {/* Items Table */}
         <Card className={`${theme.card} transition-colors duration-200 overflow-hidden`}>

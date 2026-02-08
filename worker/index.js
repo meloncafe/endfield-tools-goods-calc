@@ -28,7 +28,7 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Test-Token',
+    'Access-Control-Allow-Headers': 'Content-Type',
   };
 }
 
@@ -45,13 +45,6 @@ async function handleOcr(request, env) {
   }
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
-
-  // Auth
-  const testToken = env.TEST_TOKEN;
-  const providedToken = request.headers.get('X-Test-Token');
-  if (!testToken || providedToken !== testToken) {
-    return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
   // Daily rate limit per IP

@@ -38,6 +38,19 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: '본 도구는 팬메이드이며, Gryphline/Hypergryph와 무관합니다.',
     footerDisclaimer2: 'Arknights: Endfield™ 및 관련 상표는 각 소유자의 자산입니다.',
+
+    // OCR
+    ocrTitle: '스크린샷 자동 입력',
+    ocrUpload: '클릭하여 업로드하거나 붙여넣기 (Ctrl+V)',
+    ocrUploadHint: '교역소 / 상점 화면 · 해상도 무관',
+    ocrAnalyzing: '분석 중...',
+    ocrImported: '#{n}개 항목을 계산기에 불러왔습니다',
+    ocrNoItems: '스크린샷에서 아이템을 찾을 수 없습니다.',
+    ocrImageError: '이미지 파일을 선택해주세요.',
+    ocrTooLarge: '이미지가 너무 큽니다. 크롭 후 다시 시도해주세요.',
+    ocrClear: '지우기',
+    ocrPasteHint: '팁: Ctrl+V / Cmd+V로 스크린샷 붙여넣기',
+    ocrDailyLimit: '일일 사용 횟수를 초과했습니다 (5회/일). 내일 다시 시도해주세요.',
   },
   en: {
     title: 'Profit Calculator',
@@ -64,6 +77,19 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'This is a fan-made tool, not affiliated with Gryphline/Hypergryph.',
     footerDisclaimer2: 'Arknights: Endfield™ and related trademarks are property of their respective owners.',
+
+    // OCR
+    ocrTitle: 'Screenshot Auto-Import',
+    ocrUpload: 'Click to upload or paste (Ctrl+V) a screenshot',
+    ocrUploadHint: 'Trading post / market screen · Any resolution OK',
+    ocrAnalyzing: 'Analyzing...',
+    ocrImported: '#{n} items imported to calculator',
+    ocrNoItems: 'No items found in the screenshot.',
+    ocrImageError: 'Please select an image file.',
+    ocrTooLarge: 'Image too large after resize. Try cropping.',
+    ocrClear: 'Clear',
+    ocrPasteHint: 'Tip: Paste screenshots with Ctrl+V / Cmd+V',
+    ocrDailyLimit: 'Daily limit reached (5/day). Try again tomorrow.',
   },
   ja: {
     title: '利益計算機',
@@ -90,6 +116,19 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: 'これはファンメイドツールであり、Gryphline/Hypergryphとは無関係です。',
     footerDisclaimer2: 'Arknights: Endfield™および関連商標は各所有者の資産です。',
+
+    // OCR
+    ocrTitle: 'スクリーンショット自動入力',
+    ocrUpload: 'クリックしてアップロードまたは貼り付け（Ctrl+V）',
+    ocrUploadHint: '交易所 / ショップ画面 · 解像度不問',
+    ocrAnalyzing: '分析中...',
+    ocrImported: '#{n}件を計算機にインポートしました',
+    ocrNoItems: 'スクリーンショットからアイテムが見つかりませんでした。',
+    ocrImageError: '画像ファイルを選択してください。',
+    ocrTooLarge: '画像が大きすぎます。クロップしてください。',
+    ocrClear: 'クリア',
+    ocrPasteHint: 'ヒント: Ctrl+V / Cmd+Vでスクリーンショットを貼り付け',
+    ocrDailyLimit: '1日の使用回数を超えました（5回/日）。明日再度お試しください。',
   },
   zh: {
     title: '利润计算器',
@@ -116,6 +155,19 @@ const translations = {
     footerTitle: 'Endfield Tools',
     footerDisclaimer1: '这是粉丝制作的工具，与Gryphline/Hypergryph无关。',
     footerDisclaimer2: 'Arknights: Endfield™及相关商标均为各自所有者的财产。',
+
+    // OCR
+    ocrTitle: '截图自动导入',
+    ocrUpload: '点击上传或粘贴（Ctrl+V）截图',
+    ocrUploadHint: '交易所 / 商店界面 · 任意分辨率',
+    ocrAnalyzing: '分析中...',
+    ocrImported: '已导入#{n}个物品到计算器',
+    ocrNoItems: '未在截图中找到物品。',
+    ocrImageError: '请选择图片文件。',
+    ocrTooLarge: '图片过大，请裁剪后重试。',
+    ocrClear: '清除',
+    ocrPasteHint: '提示：使用 Ctrl+V / Cmd+V 粘贴截图',
+    ocrDailyLimit: '已达每日使用上限（5次/天），请明天再试。',
   },
 };
 
@@ -135,4 +187,10 @@ export function getTranslation(lang) {
 export function formatItemRecommended(lang, n) {
   const t = getTranslation(lang);
   return t.itemRecommended.replace('#{n}', n);
+}
+
+// Format OCR imported text with count
+export function formatOcrImported(lang, n) {
+  const t = getTranslation(lang);
+  return t.ocrImported.replace('#{n}', n);
 }

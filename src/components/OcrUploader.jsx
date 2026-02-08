@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Camera, Upload, Loader2, Check, AlertCircle, X, Clipboard } from 'lucide-react';
+import { getTranslation, formatOcrImported } from '@/lib/i18n';
 
 const MAX_DIMENSION = 1920;
 const JPEG_QUALITY = 0.85;
@@ -40,9 +40,9 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
-  const testToken = new URLSearchParams(window.location.search).get('test');
+  const t = getTranslation(lang);
 
-  // Reset all internal state when resetKey changes (triggered by parent's reset button)
+  // Reset all internal state when resetKey changes
   useEffect(() => {
     setImageData(null);
     setLoading(false);
@@ -52,7 +52,7 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
   }, [resetKey]);
 
   const analyzeAndImport = useCallback(async (data) => {
-    if (!data || !testToken) return;
+    if (!data) return;
 
     setLoading(true);
     setError(null);
@@ -61,38 +61,38 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
     try {
       const response = await fetch('/api/ocr', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Test-Token': testToken,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: data.base64, lang }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setError(result.error || `Error: ${response.status}`);
+        if (response.status === 429) {
+          setError(t.ocrDailyLimit);
+        } else {
+          setError(result.error || `Error: ${response.status}`);
+        }
         return;
       }
 
       if (result.items && result.items.length > 0) {
-        // Auto-import immediately
         onImport?.(result.items);
         setImportedCount(result.items.length);
       } else {
-        setError(result.error || 'No items found in the screenshot.');
+        setError(result.error || t.ocrNoItems);
       }
     } catch (err) {
       setError(`Network error: ${err.message}`);
     } finally {
       setLoading(false);
     }
-  }, [testToken, lang, onImport]);
+  }, [lang, onImport, t]);
 
   const handleFile = async (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file.');
+      setError(t.ocrImageError);
       return;
     }
 
@@ -102,11 +102,10 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
     try {
       const data = await processImage(file);
       if (data.base64.length > MAX_BASE64_LENGTH) {
-        setError(`Image still too large after resize (${(data.processedSize / 1024).toFixed(0)}KB). Try cropping.`);
+        setError(t.ocrTooLarge);
         return;
       }
       setImageData(data);
-      // Auto-analyze immediately after processing
       analyzeAndImport(data);
     } catch (err) {
       setError(`Failed to process image: ${err.message}`);
@@ -145,13 +144,12 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Camera className={`w-4 h-4 ${theme.textMuted}`} />
-          <span className={`text-sm font-medium ${theme.text}`}>Screenshot OCR Import</span>
-          <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0">TEST</Badge>
+          <span className={`text-sm font-medium ${theme.text}`}>{t.ocrTitle}</span>
         </div>
         {(imageData || importedCount) && (
           <Button variant="ghost" size="sm" onClick={handleClear}
             className={`h-7 px-2 ${theme.textMuted} hover:text-red-500`}>
-            <X className="w-3.5 h-3.5 mr-1" /> Clear
+            <X className="w-3.5 h-3.5 mr-1" /> {t.ocrClear}
           </Button>
         )}
       </div>
@@ -164,10 +162,8 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
-          <p className={`text-sm ${theme.textMuted}`}>Click to upload or paste (Ctrl+V) a screenshot</p>
-          <p className={`text-xs mt-1 ${theme.textMuted} opacity-60`}>
-            Trading post / market screen · Any resolution OK
-          </p>
+          <p className={`text-sm ${theme.textMuted}`}>{t.ocrUpload}</p>
+          <p className={`text-xs mt-1 ${theme.textMuted} opacity-60`}>{t.ocrUploadHint}</p>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
         </div>
       )}
@@ -189,7 +185,7 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
       {loading && (
         <div className={`flex items-center justify-center gap-2 py-3 ${theme.textMuted}`}>
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">Analyzing with Gemini Flash...</span>
+          <span className="text-sm">{t.ocrAnalyzing}</span>
         </div>
       )}
 
@@ -198,7 +194,7 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
         <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
           <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <span className="text-sm text-emerald-500">
-            {importedCount} items imported to calculator
+            {formatOcrImported(lang, importedCount)}
           </span>
         </div>
       )}
@@ -214,7 +210,7 @@ export default function OcrUploader({ lang, theme, onImport, resetKey }) {
       {/* Paste hint */}
       <div className={`flex items-center gap-1.5 text-[10px] ${theme.textMuted} opacity-50`}>
         <Clipboard className="w-3 h-3" />
-        Tip: Paste screenshots with Ctrl+V / Cmd+V
+        {t.ocrPasteHint}
       </div>
     </Card>
   );
