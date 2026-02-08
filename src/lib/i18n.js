@@ -42,7 +42,7 @@ const translations = {
     // OCR
     ocrTitle: '스크린샷 자동 입력',
     ocrUpload: '클릭하여 업로드하거나 붙여넣기 (Ctrl+V)',
-    ocrUploadHint: '교역소 / 상점 화면 · 해상도 무관',
+    ocrUploadHint: '물자 관리 화면 · 해상도 무관',
     ocrAnalyzing: '분석 중...',
     ocrImported: '#{n}개 항목을 계산기에 불러왔습니다',
     ocrNoItems: '스크린샷에서 아이템을 찾을 수 없습니다.',
@@ -81,7 +81,7 @@ const translations = {
     // OCR
     ocrTitle: 'Screenshot Auto-Import',
     ocrUpload: 'Click to upload or paste (Ctrl+V) a screenshot',
-    ocrUploadHint: 'Trading post / market screen · Any resolution OK',
+    ocrUploadHint: 'Supply management screen · Any resolution OK',
     ocrAnalyzing: 'Analyzing...',
     ocrImported: '#{n} items imported to calculator',
     ocrNoItems: 'No items found in the screenshot.',
@@ -120,7 +120,7 @@ const translations = {
     // OCR
     ocrTitle: 'スクリーンショット自動入力',
     ocrUpload: 'クリックしてアップロードまたは貼り付け（Ctrl+V）',
-    ocrUploadHint: '交易所 / ショップ画面 · 解像度不問',
+    ocrUploadHint: '物資管理画面 · 解像度不問',
     ocrAnalyzing: '分析中...',
     ocrImported: '#{n}件を計算機にインポートしました',
     ocrNoItems: 'スクリーンショットからアイテムが見つかりませんでした。',
@@ -159,7 +159,7 @@ const translations = {
     // OCR
     ocrTitle: '截图自动导入',
     ocrUpload: '点击上传或粘贴（Ctrl+V）截图',
-    ocrUploadHint: '交易所 / 商店界面 · 任意分辨率',
+    ocrUploadHint: '物资管理界面 · 任意分辨率',
     ocrAnalyzing: '分析中...',
     ocrImported: '已导入#{n}个物品到计算器',
     ocrNoItems: '未在截图中找到物品。',
