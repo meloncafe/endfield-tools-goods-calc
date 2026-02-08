@@ -6,10 +6,20 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github, StickyNote } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
+import OcrUploader from '@/components/OcrUploader';
 import { detectBrowserLanguage, getTranslation, formatItemRecommended } from '@/lib/i18n';
 
 const STORAGE_KEY = 'profit-calculator-data';
 const EXPIRY_HOURS = 24;
+
+// Check for test mode via URL parameter
+function getTestToken() {
+  try {
+    return new URLSearchParams(window.location.search).get('test');
+  } catch {
+    return null;
+  }
+}
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -20,6 +30,7 @@ export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [memoEnabled, setMemoEnabled] = useState(false);
 
+  const testToken = getTestToken();
   const t = getTranslation(lang);
 
   // localStorage에서 데이터 로드
@@ -126,6 +137,33 @@ export default function App() {
         setItems(prev => [...prev, { id: nextId, buyPrice: '', sellPrice: '', memo: '' }]);
         setNextId(prev => prev + 1);
       }
+    }
+  };
+
+  // OCR import handler: replace all items with OCR results
+  const handleOcrImport = (ocrItems) => {
+    if (!ocrItems || ocrItems.length === 0) return;
+
+    let currentId = nextId;
+    const newItems = ocrItems.map((ocrItem) => {
+      const item = {
+        id: currentId++,
+        buyPrice: ocrItem.buyPrice != null ? String(ocrItem.buyPrice) : '',
+        sellPrice: ocrItem.sellPrice != null ? String(ocrItem.sellPrice) : '',
+        memo: ocrItem.name || '',
+      };
+      return item;
+    });
+
+    // Add one empty row at the end for manual entry
+    newItems.push({ id: currentId++, buyPrice: '', sellPrice: '', memo: '' });
+
+    setItems(newItems);
+    setNextId(currentId);
+
+    // Auto-enable memo if items have names
+    if (ocrItems.some(item => item.name)) {
+      setMemoEnabled(true);
     }
   };
 
@@ -249,6 +287,15 @@ export default function App() {
             />
           </div>
         </div>
+
+        {/* OCR Uploader - only visible in test mode */}
+        {testToken && (
+          <OcrUploader
+            lang={lang}
+            theme={theme}
+            onImport={handleOcrImport}
+          />
+        )}
 
         {/* Items Table */}
         <Card className={`${theme.card} transition-colors duration-200 overflow-hidden`}>
