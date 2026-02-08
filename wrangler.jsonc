@@ -12,6 +12,9 @@
   "keep_vars": true,
   // Disable workers.dev subdomain — use custom domain only (calc.endfield.tools)
   "workers_dev": false,
+  // Smart Placement: run Worker near Gemini API servers, not user's edge
+  // Prevents "User location is not supported" errors from geo-restricted regions
+  "placement": { "mode": "smart" },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1,

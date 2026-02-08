@@ -126,6 +126,15 @@ If no items are found or the image is not a game screenshot, return:
     if (!geminiResponse.ok) {
       const errText = await geminiResponse.text();
       console.error('Gemini API error:', errText);
+
+      // Handle geo-restriction error
+      if (errText.includes('User location is not supported')) {
+        return jsonResponse(
+          { error: 'OCR is not available in your region. Please try again later.' },
+          451
+        );
+      }
+
       return jsonResponse({ error: 'Gemini API error', detail: geminiResponse.status }, 502);
     }
 
