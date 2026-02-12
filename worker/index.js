@@ -163,6 +163,12 @@ If no items are found or the image is not a game screenshot, return:
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Ezoic ads.txt redirect
+    if (url.pathname === '/ads.txt') {
+      return Response.redirect('https://srv.adstxtmanager.com/19390/endfield.tools', 301);
+    }
+
     if (url.pathname === '/api/ocr') {
       return handleOcr(request, env);
     }
