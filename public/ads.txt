@@ -1,2 +1,1 @@
-# Ezoic ads.txt - replace with your Ezoic-provided ads.txt content after account setup
-# Visit https://docs.ezoic.com/docs/ezoicads/adstxt/ for instructions
+google.com, pub-0533806077295929, DIRECT, f08c47fec0942fa0
