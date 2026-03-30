@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, Github, StickyNote, Heart } from 'lucide-react';
+import { Trash2, TrendingUp, Sparkles, Sun, Moon, RotateCcw, GitHub, StickyNote, Heart } from 'lucide-react';
 import LanguageSelector from '@/components/LanguageSelector';
 import OcrUploader from '@/components/OcrUploader';
 import { detectBrowserLanguage, getTranslation, formatItemRecommended } from '@/lib/i18n';
@@ -445,7 +445,7 @@ export default function App() {
                 rel="noopener noreferrer"
                 className={`flex items-center gap-1.5 text-xs ${theme.link} transition-colors`}
               >
-                <Github className="w-3.5 h-3.5" />
+                <GitHub className="w-3.5 h-3.5" />
                 <span>GitHub</span>
               </a>
               <span className={theme.textMuted}>·</span>
